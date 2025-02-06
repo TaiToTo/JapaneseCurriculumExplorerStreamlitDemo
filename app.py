@@ -102,7 +102,7 @@ def make_igraph_tree_plot_data(section_edges, annotations, queried_node_list=Non
 
 
 
-def get_curriculum_tree_graph_object(curriculum_tree, queried_node_list=None):
+def get_curriculum_tree_graph_object(curriculum_tree, title=None, queried_node_list=None):
     # TODO: the initial labels could be added to make_curriculum_graph() function
     labels = []
     annotations = []
@@ -113,6 +113,12 @@ def get_curriculum_tree_graph_object(curriculum_tree, queried_node_list=None):
     section_edges, v_labels, annotations = make_curriculum_graph(curriculum_tree, edges=[], labels=labels, annotations=annotations)
 
     Xe, Ye, Xn, Yn, position, igraph_annotations, node_opacities, node_colors = make_igraph_tree_plot_data(section_edges, annotations, queried_node_list=queried_node_list)
+
+    if title is not None:
+        graph_title = 'Japanese Jr. High School Social Study Curriculum as a Tree'
+    else:
+        graph_title = "Parts the most related to "
+        
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=Xe,
@@ -160,7 +166,7 @@ def get_curriculum_tree_graph_object(curriculum_tree, queried_node_list=None):
                         align='left',  # Align text to the left
                         # width=100  # Set a fixed width for the hover text
                     ),
-                    height=800  # Set the height of the figure
+                    height=600  # Set the height of the figure
                     )
     return fig
 
@@ -217,13 +223,12 @@ query_text = st.text_input("Write a query to search contents of curriculum:", "ã
 text_search_limit = st.slider("Select a number of texts to query", 
                               min_value=0, 
                               max_value=100, 
-                              value=100, 
+                              value=10, 
                               step=1
                               )
 
 if query_text :
     queried_node_list = query_vectors(query_text, text_search_limit)
-
-    fig = get_curriculum_tree_graph_object(curriculum_tree, queried_node_list=queried_node_list)
+    fig = get_curriculum_tree_graph_object(curriculum_tree, title=query_text, queried_node_list=queried_node_list)
 
 st.plotly_chart(fig)
