@@ -2,3 +2,6 @@ streamlit
 pyyaml 
 igraph
 plotly
+python-dotenv
+pandas
+weaviate-client
