@@ -13,6 +13,10 @@ import plotly.graph_objects as go
 
 load_dotenv()
 
+# Load from the JSON file
+with open("subject_color_map.json", "r") as f:
+    subject_color_map = json.load(f)
+
 def make_curriculum_graph(parent_node, edges=[], labels=[], annotations=[]):
     parent_id = parent_node["id"]
 
