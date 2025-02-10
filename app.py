@@ -67,6 +67,10 @@ def make_igraph_tree_plot_data(section_edges, annotations, queried_node_list=Non
         opacities = [0.25 for _ in range(L)]
         node_colors = ["white" for _ in range(L)]
 
+        print("L: {}".format(L))
+
+        # print([node["node_id"] for node in queried_node_list])
+        print(queried_node_list)
         for node in queried_node_list:
             opacities[int(node["node_id"])] = float(node["certainty"])
             node_colors[int(node["node_id"])] = "orange"
@@ -171,7 +175,7 @@ def get_curriculum_tree_graph_object(curriculum_tree, title=None, queried_node_l
     return fig
 
 
-def query_vectors(query_text, search_limit, selected_subjects=None):
+def query_vectors(selected_subject, query_text, search_limit, selected_subjects=None):
     class_name = "JapaneseCurriculumDemo"
 
     # Connect to Weaviate Cloud
@@ -185,13 +189,15 @@ def query_vectors(query_text, search_limit, selected_subjects=None):
 
     # object_filter_list = [Filter.by_property("subject").equal(subject) for subject in selected_subjects]
 
+    object_filter_list = [Filter.by_property("subject").equal(selected_subject)]
+
     response = collection.query.near_text(
         query=query_text,
         limit=search_limit, 
         return_metadata=MetadataQuery(distance=True, certainty=True), 
-        # filters=(
-        #     Filter.any_of(object_filter_list)
-        # )
+        filters=(
+            Filter.any_of(object_filter_list)
+        )
     )
 
     client.close()  # Free up resources
@@ -211,24 +217,42 @@ def query_vectors(query_text, search_limit, selected_subjects=None):
     
     return queried_node_list
 
+subject_dict = {
+        "外国語": "english", 
+        "美術": "fine_art", 
+        "国語": "japanese", 
+        "数学": "math", 
+        "音楽": "music", 
+        "保健体育": "physical_education", 
+        "理科": "science", 
+        "社会": "social_study", 
+        "技術・家庭": "technical_arts_and_home_economics", 
+    }
 
-# Read YAML file
-with open("tree_data/sample_structured_curriculum.yaml", "r", encoding="utf-8") as file:
-    curriculum_tree = yaml.safe_load(file)  # Load YAML content as a dictionary
 
 st.set_page_config(layout="wide")
 
-query_text = st.text_input("Write a query to search contents of curriculum:", "コンプライアンス")
+
+
+selected_subject = st.selectbox("Select a subject:", options=list(subject_dict.keys()))
 
 text_search_limit = st.slider("Select a number of texts to query", 
                               min_value=0, 
                               max_value=100, 
-                              value=10, 
+                              value=3, 
                               step=1
                               )
 
-if query_text :
-    queried_node_list = query_vectors(query_text, text_search_limit)
+query_text = st.text_input("Write a query to search contents of curriculum:", "コンプライアンス")
+
+
+if selected_subject :
+
+    selected_subject = subject_dict[selected_subject]
+    # Read YAML file
+    with open("tree_data/{}_curriculum_tree.yaml".format(selected_subject), "r", encoding="utf-8") as file:
+        curriculum_tree = yaml.safe_load(file)  # Load YAML content as a dictionary
+    queried_node_list = query_vectors(selected_subject, query_text, text_search_limit)
     fig = get_curriculum_tree_graph_object(curriculum_tree, title=query_text, queried_node_list=queried_node_list)
 
-st.plotly_chart(fig)
+    st.plotly_chart(fig)
